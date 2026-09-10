@@ -38,7 +38,8 @@ jobs:
 
       - name: Install Project Dependencies
         run: |
-          npm install --no-audit --no-fund
+          npm install --no-audit --no-fund --include=optional
+          npm install @rollup/rollup-win32-x64-msvc --no-save
 
       - name: Build Web Renderer (Vite)
         run: |
