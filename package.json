@@ -3,6 +3,7 @@
   "productName": "Niche Research Department",
   "appId": "com.niche.research.department",
   "version": "1.0.0",
+  "author": "Niche Research Department",
   "description": "Desktop application for an agentic AI niche research department with in-app auto-updater, SQLite storage, and luxury UI.",
   "private": true,
   "type": "module",
@@ -22,7 +23,6 @@
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
-    "better-sqlite3": "^11.8.1",
     "dotenv": "^17.2.3",
     "electron-updater": "^6.8.9",
     "express": "^4.21.2",
@@ -45,6 +45,7 @@
     "typescript": "~5.8.2"
   },
   "optionalDependencies": {
+    "better-sqlite3": "^13.0.3",
     "@rollup/rollup-win32-x64-msvc": "^4.63.1",
     "lightningcss-win32-x64-msvc": "^1.32.0",
     "@esbuild/win32-x64": "^0.25.0"

@@ -2,6 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.prisma",
   "appId": "com.niche.research.department",
   "productName": "Niche Research Department",
+  "npmRebuild": false,
+  "buildDependenciesFromSource": false,
   "directories": {
     "output": "release"
   },
@@ -11,7 +13,8 @@
     "package.json"
   ],
   "extraMetadata": {
-    "main": "dist-electron/main/index.js"
+    "main": "dist-electron/main/index.js",
+    "author": "Niche Research Department"
   },
   "win": {
     "target": [
