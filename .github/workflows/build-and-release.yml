@@ -26,8 +26,7 @@ jobs:
       - name: Setup Node.js Runtime
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: Extract Version from package.json
         id: pkg-version
@@ -39,7 +38,7 @@ jobs:
 
       - name: Install Project Dependencies
         run: |
-          npm ci --legacy-peer-deps || npm install
+          npm install --no-audit --no-fund
 
       - name: Build Web Renderer (Vite)
         run: |

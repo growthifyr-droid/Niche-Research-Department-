@@ -35,8 +35,6 @@
   },
   "publish": {
     "provider": "github",
-    "owner": "YOUR_GITHUB_USERNAME_OR_ORG",
-    "repo": "niche-research-department",
     "releaseType": "release"
   }
 }
