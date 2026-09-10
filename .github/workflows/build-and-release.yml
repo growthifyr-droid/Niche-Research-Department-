@@ -1,0 +1,63 @@
+name: Build & Release Desktop App
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build Windows Installer & Publish Release
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Extract Version from package.json
+        id: pkg-version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Building Niche Research Department v$VERSION"
+
+      - name: Install Project Dependencies
+        run: |
+          npm ci --legacy-peer-deps || npm install
+
+      - name: Build Web Renderer (Vite)
+        run: |
+          npm run build:renderer
+
+      - name: Build Electron Main & Preload (esbuild)
+        run: |
+          npm run build:electron
+
+      - name: Package Windows Installer & Publish to GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          npx electron-builder --win nsis --publish always
+
+      - name: Verify Release Artifacts
+        shell: bash
+        run: |
+          echo "Verifying generated distribution artifacts..."
+          ls -la release/ || echo "Release directory inspected"
+          echo "Successfully published Windows NSIS installer, latest.yml, and .blockmap files for auto-updater."

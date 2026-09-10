@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.prisma",
+  "appId": "com.niche.research.department",
+  "productName": "Niche Research Department",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "dist-electron/**/*",
+    "package.json"
+  ],
+  "extraMetadata": {
+    "main": "dist-electron/main/index.js"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "artifactName": "${productName}-Setup-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "deleteAppDataOnUninstall": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Niche Research Department",
+    "uninstallDisplayName": "Niche Research Department"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "YOUR_GITHUB_USERNAME_OR_ORG",
+    "repo": "niche-research-department",
+    "releaseType": "release"
+  }
+}

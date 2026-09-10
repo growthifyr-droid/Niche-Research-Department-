@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    
+    /* Light Theme (Crisp White / Soft Porcelain Slate / Refined Indigo-Cyan Accents) */
+    --bg-app: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #ffffff;
+    --bg-glass: rgba(255, 255, 255, 0.82);
+    --bg-sidebar: #f1f5f9;
+    --bg-titlebar: #ffffff;
+    
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --text-dim: #94a3b8;
+    
+    --border-subtle: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --border-glass: rgba(226, 232, 240, 0.8);
+    
+    --accent-blue: #0284c7;
+    --accent-cyan: #06b6d4;
+    --accent-emerald: #059669;
+    --accent-amber: #d97706;
+    --accent-glow: rgba(2, 132, 199, 0.12);
+    
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --card-border: #e2e8f0;
+    --card-hover-border: #cbd5e1;
+    --card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    
+    --sidebar-active-bg: #e2e8f0;
+    --sidebar-active-text: #0f172a;
+    --sidebar-hover-bg: #eaeff5;
+    
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+    --input-focus: #0284c7;
+    
+    --scrollbar-track: #f1f5f9;
+    --scrollbar-thumb: #cbd5e1;
+    --scrollbar-thumb-hover: #94a3b8;
+  }
+
+  .dark {
+    /* Dark Theme (Deep Navy / Charcoal Obsidian / Vibrant Jewel Accents) */
+    --bg-app: #080c14;
+    --bg-surface: #0e1422;
+    --bg-surface-elevated: #141c30;
+    --bg-glass: rgba(14, 20, 34, 0.82);
+    --bg-sidebar: #090e18;
+    --bg-titlebar: #070a11;
+    
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    
+    --border-subtle: #192338;
+    --border-strong: #273754;
+    --border-glass: rgba(39, 55, 84, 0.6);
+    
+    --accent-blue: #38bdf8;
+    --accent-cyan: #22d3ee;
+    --accent-emerald: #10b981;
+    --accent-amber: #fbbf24;
+    --accent-glow: rgba(56, 189, 248, 0.18);
+    
+    --card-bg: rgba(14, 20, 34, 0.85);
+    --card-border: #1a253c;
+    --card-hover-border: #2e4166;
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+    
+    --sidebar-active-bg: rgba(56, 189, 248, 0.12);
+    --sidebar-active-text: #38bdf8;
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.04);
+    
+    --input-bg: #090e19;
+    --input-border: #1e2c45;
+    --input-focus: #38bdf8;
+    
+    --scrollbar-track: #080c14;
+    --scrollbar-thumb: #1c273c;
+    --scrollbar-thumb-hover: #2e4166;
+  }
+
+  * {
+    font-family: var(--font-family);
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Electron App Region Drag Helpers */
+.titlebar-drag-region {
+  -webkit-app-region: drag;
+}
+
+.titlebar-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Custom Luxury Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Subtle Glass Effect */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+}
+
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: var(--card-hover-border);
+}

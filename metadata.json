@@ -1,0 +1,6 @@
+{
+  "name": "Niche Research Department",
+  "description": "Desktop application skeleton for an agentic AI niche research department with in-app auto-updater, SQLite storage, and luxury UI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
