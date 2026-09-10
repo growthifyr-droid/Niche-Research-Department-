@@ -45,6 +45,8 @@
     "typescript": "~5.8.2"
   },
   "optionalDependencies": {
-    "@rollup/rollup-win32-x64-msvc": "^4.63.1"
+    "@rollup/rollup-win32-x64-msvc": "^4.63.1",
+    "lightningcss-win32-x64-msvc": "^1.32.0",
+    "@esbuild/win32-x64": "^0.25.0"
   }
 }

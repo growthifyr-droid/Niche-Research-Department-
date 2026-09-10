@@ -37,9 +37,11 @@ jobs:
           echo "Building Niche Research Department v$VERSION"
 
       - name: Install Project Dependencies
+        shell: bash
         run: |
+          rm -f package-lock.json
           npm install --no-audit --no-fund --include=optional
-          npm install @rollup/rollup-win32-x64-msvc --no-save
+          npm install --no-save @rollup/rollup-win32-x64-msvc lightningcss-win32-x64-msvc @esbuild/win32-x64
 
       - name: Build Web Renderer (Vite)
         run: |
