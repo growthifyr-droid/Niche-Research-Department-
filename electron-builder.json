@@ -2,11 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.prisma",
   "appId": "com.niche.research.department",
   "productName": "Niche Research Department",
-  "npmRebuild": false,
-  "buildDependenciesFromSource": false,
+  "buildDependenciesFromSource": true,
   "directories": {
     "output": "release"
   },
+  "asar": true,
+  "asarUnpack": [
+    "**/*.node"
+  ],
   "files": [
     "dist/**/*",
     "dist-electron/**/*",
