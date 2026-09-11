@@ -46,6 +46,7 @@
   },
   "optionalDependencies": {
     "better-sqlite3": "^13.0.3",
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.0.0",
     "@rollup/rollup-win32-x64-msvc": "^4.63.1",
     "lightningcss-win32-x64-msvc": "^1.32.0",
     "@esbuild/win32-x64": "^0.25.0"
