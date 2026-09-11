@@ -2,9 +2,11 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.prisma",
   "appId": "com.niche.research.department",
   "productName": "Niche Research Department",
+  "copyright": "Copyright © 2026 Niche Research Department. All rights reserved.",
   "buildDependenciesFromSource": true,
   "directories": {
-    "output": "release"
+    "output": "release",
+    "buildResources": "build"
   },
   "asar": true,
   "asarUnpack": [
@@ -13,11 +15,13 @@
   "files": [
     "dist/**/*",
     "dist-electron/**/*",
+    "build/**/*",
     "package.json"
   ],
   "extraMetadata": {
     "main": "dist-electron/main/index.js",
-    "author": "Niche Research Department"
+    "author": "Niche Research Department",
+    "description": "Desktop application for an agentic AI niche research department with in-app auto-updater, SQLite storage, and luxury UI."
   },
   "win": {
     "target": [
@@ -28,7 +32,10 @@
         ]
       }
     ],
-    "artifactName": "${productName}-Setup-${version}.${ext}"
+    "icon": "build/icon.ico",
+    "artifactName": "${productName}-Setup-${version}.${ext}",
+    "publisherName": "Niche Research Department",
+    "legalTrademarks": "Niche Research Department"
   },
   "nsis": {
     "oneClick": false,
@@ -37,7 +44,17 @@
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
     "shortcutName": "Niche Research Department",
-    "uninstallDisplayName": "Niche Research Department"
+    "uninstallDisplayName": "Niche Research Department",
+    "installerIcon": "build/icon.ico",
+    "uninstallerIcon": "build/icon.ico",
+    "installerHeaderIcon": "build/icon.ico",
+    "runAfterFinish": true
+  },
+  "_codeSigningInstructions": {
+    "note": "Windows SmartScreen 'Unknown Publisher' displays because this release is not signed with an EV/OV Authenticode certificate.",
+    "howToSign": "To permanently eliminate SmartScreen warnings, configure 'certificateFile' (path to your .pfx certificate) and 'certificatePassword' (or set CSC_LINK and CSC_KEY_PASSWORD environment variables in CI/CD).",
+    "certificateFile": null,
+    "certificatePassword": null
   },
   "publish": {
     "provider": "github",

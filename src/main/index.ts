@@ -95,6 +95,16 @@ function saveWindowState(): void {
 async function createWindow(): Promise<void> {
   const windowState = loadWindowState();
 
+  // Resolve unique luxury app icon for BrowserWindow and Windows taskbar
+  const possibleIcons = [
+    path.join(app.getAppPath(), 'build/icon.ico'),
+    path.join(__dirname, '../../build/icon.ico'),
+    path.join(__dirname, '../build/icon.ico'),
+    path.join(app.getAppPath(), 'build/icon.png'),
+    path.join(__dirname, '../../build/icon.png')
+  ];
+  const windowIcon = possibleIcons.find(p => fs.existsSync(p));
+
   // Create BrowserWindow with high-end desktop attributes
   mainWindow = new BrowserWindow({
     x: windowState.x,
@@ -103,6 +113,7 @@ async function createWindow(): Promise<void> {
     height: windowState.height,
     minWidth: 1280,
     minHeight: 800,
+    icon: windowIcon,
     frame: false, // Professional custom frameless window title bar
     titleBarStyle: 'hidden',
     backgroundColor: '#090D16',
@@ -138,22 +149,54 @@ async function createWindow(): Promise<void> {
   // Bind updater to window
   updaterManager.setWindow(mainWindow);
 
-  // Load URL or dist bundle
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:3000';
   const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
-  if (isDev && process.env.VITE_DEV_SERVER_URL) {
-    console.log(`[Main] Loading dev server: ${devUrl}`);
-    await mainWindow.loadURL(devUrl);
-  } else {
-    const indexPath = path.join(__dirname, '../../dist/index.html');
-    if (fs.existsSync(indexPath)) {
-      console.log(`[Main] Loading production build: ${indexPath}`);
-      await mainWindow.loadFile(indexPath);
+  // DEBUG SAFETY NET: Add 'did-fail-load' listener to catch and report blank screen causes
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error(`[Main] CRITICAL: Window failed to load URL: "${validatedURL}"`);
+    console.error(`[Main] Error code: ${errorCode}, Description: ${errorDescription}`);
+    if (isDev) {
+      mainWindow?.webContents.openDevTools({ mode: 'detach' });
+    }
+  });
+
+  // Capture console warnings/errors from renderer to assist debugging
+  mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    if (level >= 2) {
+      console.warn(`[Renderer Log] [lvl ${level}] ${message} (${sourceId}:${line})`);
+    }
+  });
+
+  // Resolve production index.html file path accurately across unpackaged and packaged app.asar
+  const possibleIndexPaths = [
+    path.join(app.getAppPath(), 'dist/index.html'),
+    path.join(__dirname, '../../dist/index.html'),
+    path.join(__dirname, '../renderer/index.html'),
+    path.join(__dirname, '../dist/index.html'),
+    path.join(process.cwd(), 'dist/index.html')
+  ];
+  const resolvedIndexPath = possibleIndexPaths.find(p => fs.existsSync(p));
+
+  try {
+    if (isDev && process.env.VITE_DEV_SERVER_URL) {
+      console.log(`[Main] Loading dev server: ${devUrl}`);
+      await mainWindow.loadURL(devUrl);
+    } else if (resolvedIndexPath) {
+      console.log(`[Main] Loading production index file: ${resolvedIndexPath}`);
+      await mainWindow.loadFile(resolvedIndexPath);
     } else {
+      console.error('[Main] CRITICAL ERROR: Could not locate production index.html in any expected path:');
+      possibleIndexPaths.forEach((p, idx) => console.error(`  [${idx}] Checked: ${p} (exists: false)`));
       console.log(`[Main] Falling back to devUrl: ${devUrl}`);
       await mainWindow.loadURL(devUrl);
+      if (isDev) {
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+      }
     }
+  } catch (loadErr) {
+    console.error('[Main] Exception caught while loading renderer:', loadErr);
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
   // Silent update check 3 seconds after app launch (non-blocking)

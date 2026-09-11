@@ -2,14 +2,15 @@
   "name": "niche-research-department",
   "productName": "Niche Research Department",
   "appId": "com.niche.research.department",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Niche Research Department",
   "description": "Desktop application for an agentic AI niche research department with in-app auto-updater, SQLite storage, and luxury UI.",
   "private": true,
   "main": "dist-electron/main/index.js",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build && node scripts/build-electron.mjs",
+    "build": "node scripts/generate-icons.mjs && vite build && node scripts/build-electron.mjs",
+    "build:icons": "node scripts/generate-icons.mjs",
     "build:renderer": "vite build",
     "build:electron": "node scripts/build-electron.mjs",
     "preview": "vite preview",
@@ -29,6 +30,7 @@
     "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "react-router-dom": "^7.18.3",
     "vite": "^6.2.3"
   },
   "devDependencies": {
@@ -39,6 +41,8 @@
     "electron": "^44.3.0",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.25.0",
+    "png-to-ico": "^3.0.2",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2"

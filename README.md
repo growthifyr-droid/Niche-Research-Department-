@@ -134,7 +134,33 @@ The compiled installer will be output to the `release/` directory:
 
 ---
 
-## 6. Upcoming Architecture (Prompt 2+)
+## 6. Windows SmartScreen & Code Signing Note
+
+### Why does Windows SmartScreen ("Windows protected your PC") appear?
+When you first run the generated `.exe` installer or update binary, Windows Defender SmartScreen may display an alert saying *"Windows protected your PC"* or *"Unknown publisher"*.
+- **This is completely normal for newly generated open-source or indie executables.**
+- Microsoft SmartScreen checks executables against a cloud reputation database. Because the application was built without an expensive corporate Extended Validation (EV) or Standard (OV) Authenticode certificate, Microsoft flags it as an "Unknown Publisher" until sufficient reputation is accumulated.
+
+### How to Install / Run:
+1. When the blue SmartScreen popup appears, click **"More info"**.
+2. Click the **"Run anyway"** button that appears.
+3. The installer will proceed with full publisher metadata ("Niche Research Department") and install to your chosen directory.
+
+### How to Permanently Eliminate SmartScreen Warnings:
+To permanently remove SmartScreen warnings for enterprise distribution, you can provide an Authenticode Code Signing Certificate:
+1. Obtain a `.pfx` or `.p12` code signing certificate (e.g., from Sectigo, DigiCert, or SSL.com).
+2. Configure `electron-builder.json` with your certificate or pass it via GitHub Actions Secrets:
+   ```json
+   "win": {
+     "certificateFile": "path/to/certificate.pfx",
+     "certificatePassword": "YOUR_CERTIFICATE_PASSWORD"
+   }
+   ```
+   *Alternatively, in CI/CD (GitHub Actions), set the `CSC_LINK` (base64-encoded .pfx) and `CSC_KEY_PASSWORD` secrets without modifying configuration files.*
+
+---
+
+## 7. Upcoming Architecture (Prompt 2+)
 
 Future prompts will introduce the 35 autonomous AI research agents:
 - **Phase 1**: Niche Discovery & SERP Crawlers (Search Query Expander, Trend Scanner)

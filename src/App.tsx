@@ -3,7 +3,8 @@
  * Desktop foundation for an agentic AI niche research system
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { UpdaterProvider } from './context/UpdaterContext';
@@ -21,12 +22,44 @@ import { SchedulerPage } from './pages/SchedulerPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
-  const [activePage, setActivePage] = useState<PageId>('dashboard');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Extract page ID from hash router path (e.g. /settings -> settings)
+  const getPageFromPath = (pathname: string): PageId => {
+    const cleaned = pathname.replace(/^\//, '') as PageId;
+    const validPages: PageId[] = [
+      'dashboard',
+      'new-research',
+      'niche-module',
+      'reports',
+      'consultant-chat',
+      'scheduler',
+      'settings'
+    ];
+    return validPages.includes(cleaned) ? cleaned : 'dashboard';
+  };
+
+  const [activePage, setActivePage] = useState<PageId>(() => getPageFromPath(location.pathname));
+
+  // Sync state when location.pathname updates (e.g. browser back/forward or hash change)
+  useEffect(() => {
+    const pageFromPath = getPageFromPath(location.pathname);
+    if (pageFromPath !== activePage) {
+      setActivePage(pageFromPath);
+    }
+  }, [location.pathname]);
+
+  // Navigate function that keeps hash router in sync
+  const handlePageSelect = (page: PageId) => {
+    setActivePage(page);
+    navigate(`/${page}`);
+  };
 
   const renderActivePage = () => {
     switch (activePage) {
       case 'dashboard':
-        return <DashboardPage onNavigate={setActivePage} />;
+        return <DashboardPage onNavigate={handlePageSelect} />;
       case 'new-research':
         return <NewResearchPage />;
       case 'niche-module':
@@ -40,7 +73,7 @@ export default function App() {
       case 'settings':
         return <SettingsPage />;
       default:
-        return <DashboardPage onNavigate={setActivePage} />;
+        return <DashboardPage onNavigate={handlePageSelect} />;
     }
   };
 
@@ -53,11 +86,11 @@ export default function App() {
             className="flex flex-col h-screen w-screen overflow-hidden select-none bg-[var(--bg-app)] text-[var(--text-main)]"
           >
             {/* Professional Custom Title Bar */}
-            <TitleBar onNavigateToSettings={() => setActivePage('settings')} />
+            <TitleBar onNavigateToSettings={() => handlePageSelect('settings')} />
 
             {/* Main Application Layout (Sidebar + Content Stage) */}
             <div className="flex-1 flex overflow-hidden">
-              <Sidebar activePage={activePage} onSelectPage={setActivePage} />
+              <Sidebar activePage={activePage} onSelectPage={handlePageSelect} />
 
               <main
                 id="main-stage"

@@ -5,6 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    base: './', // Mandatory for Electron production packaging under file:// protocol
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
