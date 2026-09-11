@@ -1,65 +1,62 @@
-name: Build & Release Desktop App
+name: Build Niche Research Department
 
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
-
-permissions:
-  contents: write
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-and-release:
-    name: Build Windows Installer & Publish Release
+  build:
     runs-on: windows-latest
-    timeout-minutes: 45
-
+    permissions:
+      contents: write
     steps:
-      - name: Checkout Code Repository
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node.js Runtime
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
 
-      - name: Extract Version from package.json
-        id: pkg-version
+      - name: Install dependencies
+        run: npm install
+
+      - name: Get version from package.json
+        id: version
         shell: bash
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
-          echo "Building Niche Research Department v$VERSION"
+          VERSION=$(node -p "require('./package.json').version.trim()")
+          echo "Building Niche Research Department version: $VERSION"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Install Project Dependencies
-        shell: bash
+      - name: Build app installer & update metadata
+        run: npm run dist -- --publish never
+
+      - name: Verify build output artifacts
         run: |
-          rm -f package-lock.json
-          npm install --no-audit --no-fund --include=optional
-          npm install --no-save @rollup/rollup-win32-x64-msvc lightningcss-win32-x64-msvc @esbuild/win32-x64
+          Write-Host "Listing generated build artifacts in release/ and dist/:"
+          if (Test-Path release) { Get-ChildItem -Path release | Format-Table Name, Length, LastWriteTime }
+          if (Test-Path dist) { Get-ChildItem -Path dist | Format-Table Name, Length, LastWriteTime }
 
-      - name: Build Web Renderer (Vite)
-        run: |
-          npm run build:renderer
-
-      - name: Build Electron Main & Preload (esbuild)
-        run: |
-          npm run build:electron
-
-      - name: Package Windows Installer & Publish to GitHub Releases
+      - name: Publish GitHub Release for Auto-Updater
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Niche Research Department ${{ steps.version.outputs.tag }}"
+          draft: false
+          prerelease: false
+          make_latest: true
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+          files: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          npx electron-builder --win nsis --publish always
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify Release Artifacts
-        shell: bash
-        run: |
-          echo "Verifying generated distribution artifacts..."
-          ls -la release/ || echo "Release directory inspected"
-          echo "Successfully published Windows NSIS installer, latest.yml, and .blockmap files for auto-updater."
