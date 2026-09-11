@@ -27,7 +27,13 @@ const electronAPI: ElectronAPI = {
     saveAllSettings: (settings: Partial<AppSettings>) =>
       ipcRenderer.invoke('db:saveAllSettings', settings),
     getStats: () => ipcRenderer.invoke('db:getStats'),
-    getDbPath: () => ipcRenderer.invoke('db:getDbPath')
+    getDbPath: () => ipcRenderer.invoke('db:getDbPath'),
+    getCountries: () => ipcRenderer.invoke('db:getCountries'),
+    getCountry: (code: string) => ipcRenderer.invoke('db:getCountry', code),
+    getResearchRuns: (limit?: number) => ipcRenderer.invoke('db:getResearchRuns', limit),
+    getNiches: (limit?: number) => ipcRenderer.invoke('db:getNiches', limit),
+    getReports: (limit?: number) => ipcRenderer.invoke('db:getReports', limit),
+    getActivityLogs: (limit?: number, runId?: string) => ipcRenderer.invoke('db:getActivityLogs', limit, runId)
   },
 
   updater: {

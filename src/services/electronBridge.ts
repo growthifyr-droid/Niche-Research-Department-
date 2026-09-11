@@ -158,6 +158,58 @@ class ElectronBridgeService implements ElectronAPI {
         return window.electronAPI.database.getDbPath();
       }
       return 'C:\\Users\\AppData\\Roaming\\niche-research-department\\niche-research.db';
+    },
+
+    getCountries: async (): Promise<any[]> => {
+      if (this.isElectron && window.electronAPI) {
+        return window.electronAPI.database.getCountries();
+      }
+      try {
+        const { SEEDED_COUNTRIES } = await import('../main/db/seeds/countries');
+        return SEEDED_COUNTRIES;
+      } catch {
+        return [];
+      }
+    },
+
+    getCountry: async (code: string): Promise<any> => {
+      if (this.isElectron && window.electronAPI) {
+        return window.electronAPI.database.getCountry(code);
+      }
+      try {
+        const { SEEDED_COUNTRIES } = await import('../main/db/seeds/countries');
+        return SEEDED_COUNTRIES.find(c => c.countryCode.toUpperCase() === code.toUpperCase()) || null;
+      } catch {
+        return null;
+      }
+    },
+
+    getResearchRuns: async (limit?: number): Promise<any[]> => {
+      if (this.isElectron && window.electronAPI) {
+        return window.electronAPI.database.getResearchRuns(limit);
+      }
+      return [];
+    },
+
+    getNiches: async (limit?: number): Promise<any[]> => {
+      if (this.isElectron && window.electronAPI) {
+        return window.electronAPI.database.getNiches(limit);
+      }
+      return [];
+    },
+
+    getReports: async (limit?: number): Promise<any[]> => {
+      if (this.isElectron && window.electronAPI) {
+        return window.electronAPI.database.getReports(limit);
+      }
+      return [];
+    },
+
+    getActivityLogs: async (limit?: number, runId?: string): Promise<any[]> => {
+      if (this.isElectron && window.electronAPI) {
+        return window.electronAPI.database.getActivityLogs(limit, runId);
+      }
+      return [];
     }
   };
 

@@ -292,4 +292,30 @@ function registerAppIpc(): void {
   ipcMain.handle('db:getDbPath', () => {
     return dbManager.getDbPath();
   });
+
+  // Global Country Intelligence IPC
+  ipcMain.handle('db:getCountries', () => {
+    return dbManager.getRepositories().countries.getAll();
+  });
+
+  ipcMain.handle('db:getCountry', (_, code: string) => {
+    return dbManager.getRepositories().countries.getByCode(code);
+  });
+
+  // Research Runs & Niches IPC
+  ipcMain.handle('db:getResearchRuns', (_, limit?: number) => {
+    return dbManager.getRepositories().researchRuns.getAll(limit);
+  });
+
+  ipcMain.handle('db:getNiches', (_, limit?: number) => {
+    return dbManager.getRepositories().niches.getAll(limit);
+  });
+
+  ipcMain.handle('db:getReports', (_, limit?: number) => {
+    return dbManager.getRepositories().reports.getAll(limit);
+  });
+
+  ipcMain.handle('db:getActivityLogs', (_, limit?: number, runId?: string) => {
+    return dbManager.getRepositories().activityLogs.getRecent(limit, runId);
+  });
 }

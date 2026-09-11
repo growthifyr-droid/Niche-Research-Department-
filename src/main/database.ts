@@ -10,15 +10,13 @@
 
 import { app } from 'electron';
 import * as path from 'path';
-import * as fs from 'fs';
 import type { AppSettings, SystemStats } from '../types/electron';
+import { getDatabase, getRepositories, getStoragePaths, AppRepositories } from './db/connection';
 
 export class DatabaseManager {
   private static instance: DatabaseManager;
   private db: any = null;
-  private dbPath: string = '';
-  private isConnected: boolean = false;
-  private fallbackStore: Record<string, string> = {};
+  private repositories!: AppRepositories;
 
   private defaultSettings: AppSettings = {
     theme: 'dark',
@@ -42,183 +40,111 @@ export class DatabaseManager {
 
   private initDatabase(): void {
     try {
-      // 1. Resolve safe userData directory
-      const userDataDir = app.getPath('userData');
-      if (!fs.existsSync(userDataDir)) {
-        fs.mkdirSync(userDataDir, { recursive: true });
-      }
-
-      this.dbPath = path.join(userDataDir, 'niche-research.db');
-      console.log(`[DatabaseManager] Initializing SQLite database at safe userData path: ${this.dbPath}`);
-
-      // 2. Load better-sqlite3 dynamically to allow graceful fallback if binary build differs
-      let DatabaseConstructor: any;
-      try {
-        DatabaseConstructor = require('better-sqlite3');
-      } catch (requireErr) {
-        console.warn('[DatabaseManager] better-sqlite3 native addon not loaded directly; running in structured storage fallback mode:', requireErr);
-      }
-
-      if (DatabaseConstructor) {
-        this.db = new DatabaseConstructor(this.dbPath, {
-          verbose: process.env.NODE_ENV === 'development' ? console.log : undefined
-        });
-
-        // Configure optimal connection pragmas for robustness and performance
-        this.db.pragma('journal_mode = WAL');
-        this.db.pragma('foreign_keys = ON');
-        this.db.pragma('busy_timeout = 5000');
-        this.db.pragma('synchronous = NORMAL');
-
-        this.initSchema();
-        this.isConnected = true;
-        console.log('[DatabaseManager] SQLite database connected successfully with WAL mode enabled.');
-      } else {
-        this.initFallbackStorage(userDataDir);
+      this.db = getDatabase();
+      this.repositories = getRepositories();
+      console.log('[DatabaseManager] Database initialized with complete Day 1 schema & repositories.');
+      
+      // Ensure default settings exist in Setting table
+      for (const [key, value] of Object.entries(this.defaultSettings)) {
+        const existing = this.repositories.settings.get(key);
+        if (existing === null || existing === undefined) {
+          this.repositories.settings.set(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+        }
       }
     } catch (err) {
-      console.error('[DatabaseManager] Failed to initialize SQLite database:', err);
-      const userDataDir = app.getPath('userData');
-      this.initFallbackStorage(userDataDir);
+      console.error('[DatabaseManager] Error during database initialization:', err);
     }
   }
 
-  private initSchema(): void {
-    if (!this.db) return;
-
-    // Schema: Settings Key-Value Table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS app_settings (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS app_metadata (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      );
-
-      -- Index for rapid settings lookup
-      CREATE INDEX IF NOT EXISTS idx_app_settings_key ON app_settings(key);
-    `);
-
-    // Seed defaults if empty
-    const stmt = this.db.prepare('INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)');
-    for (const [key, value] of Object.entries(this.defaultSettings)) {
-      stmt.run(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
-    }
-  }
-
-  private initFallbackStorage(userDataDir: string): void {
-    try {
-      const fallbackFile = path.join(userDataDir, 'settings-storage.json');
-      if (fs.existsSync(fallbackFile)) {
-        const content = fs.readFileSync(fallbackFile, 'utf-8');
-        this.fallbackStore = JSON.parse(content);
-      } else {
-        this.fallbackStore = { ...this.defaultSettings } as any;
-        fs.writeFileSync(fallbackFile, JSON.stringify(this.fallbackStore, null, 2), 'utf-8');
-      }
-      this.isConnected = true;
-      console.log('[DatabaseManager] Safe fallback storage initialized in userData.');
-    } catch (err) {
-      console.error('[DatabaseManager] Fallback store init error:', err);
-    }
+  public getRepositories(): AppRepositories {
+    return this.repositories;
   }
 
   public getSettings(): AppSettings {
     const settings: AppSettings = { ...this.defaultSettings };
 
-    if (this.db) {
-      try {
-        const rows = this.db.prepare('SELECT key, value FROM app_settings').all() as { key: string; value: string }[];
-        for (const row of rows) {
-          if (row.key === 'theme') settings.theme = row.value as any;
-          if (row.key === 'reportLanguage') settings.reportLanguage = row.value as any;
-          if (row.key === 'geminiApiKey') settings.geminiApiKey = row.value;
-          if (row.key === 'whiteLabelBrand') settings.whiteLabelBrand = row.value;
-          if (row.key === 'whiteLabelLogo') settings.whiteLabelLogo = row.value;
-          if (row.key === 'autoApprove') settings.autoApprove = row.value === 'true';
-        }
-        return settings;
-      } catch (err) {
-        console.error('[DatabaseManager] Error querying settings:', err);
-      }
+    try {
+      const allSettings = this.repositories.settings.getAll();
+      if (allSettings.theme) settings.theme = allSettings.theme as any;
+      if (allSettings.reportLanguage) settings.reportLanguage = allSettings.reportLanguage as any;
+      if (allSettings.geminiApiKey) settings.geminiApiKey = allSettings.geminiApiKey;
+      if (allSettings.whiteLabelBrand) settings.whiteLabelBrand = allSettings.whiteLabelBrand;
+      if (allSettings.whiteLabelLogo) settings.whiteLabelLogo = allSettings.whiteLabelLogo;
+      if (allSettings.autoApprove !== undefined) settings.autoApprove = allSettings.autoApprove === 'true';
+    } catch (err) {
+      console.error('[DatabaseManager] Error fetching settings:', err);
     }
 
-    // Fallback store
-    return {
-      theme: (this.fallbackStore.theme as any) || 'dark',
-      reportLanguage: (this.fallbackStore.reportLanguage as any) || 'en',
-      geminiApiKey: this.fallbackStore.geminiApiKey || '',
-      whiteLabelBrand: this.fallbackStore.whiteLabelBrand || 'Niche Research Dept.',
-      whiteLabelLogo: this.fallbackStore.whiteLabelLogo || '',
-      autoApprove: String(this.fallbackStore.autoApprove) === 'true'
-    };
+    return settings;
   }
 
   public saveSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): boolean {
-    const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
-
-    if (this.db) {
-      try {
-        const stmt = this.db.prepare(`
-          INSERT INTO app_settings (key, value, updated_at) 
-          VALUES (?, ?, CURRENT_TIMESTAMP)
-          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
-        `);
-        stmt.run(key, strVal);
-        return true;
-      } catch (err) {
-        console.error(`[DatabaseManager] Failed to save setting ${String(key)}:`, err);
-        return false;
-      }
-    }
-
     try {
-      this.fallbackStore[key] = strVal;
-      const userDataDir = app.getPath('userData');
-      const fallbackFile = path.join(userDataDir, 'settings-storage.json');
-      fs.writeFileSync(fallbackFile, JSON.stringify(this.fallbackStore, null, 2), 'utf-8');
+      const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
+      this.repositories.settings.set(String(key), strVal);
       return true;
     } catch (err) {
-      console.error(`[DatabaseManager] Failed to save setting fallback ${String(key)}:`, err);
+      console.error(`[DatabaseManager] Failed to save setting ${String(key)}:`, err);
       return false;
     }
   }
 
   public saveAllSettings(settings: Partial<AppSettings>): boolean {
-    let success = true;
-    for (const [k, v] of Object.entries(settings)) {
-      if (v !== undefined) {
-        const res = this.saveSetting(k as keyof AppSettings, v as any);
-        if (!res) success = false;
+    try {
+      const payload: Record<string, string> = {};
+      for (const [k, v] of Object.entries(settings)) {
+        if (v !== undefined) {
+          payload[k] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        }
       }
+      this.repositories.settings.setMany(payload);
+      return true;
+    } catch (err) {
+      console.error('[DatabaseManager] Failed to save settings batch:', err);
+      return false;
     }
-    return success;
   }
 
   public getStats(): SystemStats {
-    return {
-      totalNiches: 0,
-      reportsGenerated: 0,
-      activeRuns: 0,
-      countriesCovered: 0,
-      dbStatus: this.isConnected ? 'connected' : 'disconnected',
-      dbPath: this.dbPath || path.join(app.getPath('userData'), 'niche-research.db')
-    };
+    try {
+      const totalNiches = this.repositories.niches.getTotalCount();
+      const reportsGenerated = this.repositories.reports.getCount();
+      const activeRuns = this.repositories.researchRuns.getActiveCount();
+      const countriesCovered = this.repositories.countries.getCount();
+      const { dbPath } = getStoragePaths();
+
+      return {
+        totalNiches,
+        reportsGenerated,
+        activeRuns,
+        countriesCovered,
+        dbStatus: 'connected',
+        dbPath
+      };
+    } catch (err) {
+      console.error('[DatabaseManager] Error getting stats:', err);
+      const { dbPath } = getStoragePaths();
+      return {
+        totalNiches: 0,
+        reportsGenerated: 0,
+        activeRuns: 0,
+        countriesCovered: 0,
+        dbStatus: 'error',
+        dbPath
+      };
+    }
   }
 
   public getDbPath(): string {
-    return this.dbPath || path.join(app.getPath('userData'), 'niche-research.db');
+    const { dbPath } = getStoragePaths();
+    return dbPath;
   }
 
   public close(): void {
-    if (this.db) {
+    if (this.db && typeof this.db.close === 'function') {
       try {
         this.db.close();
-        console.log('[DatabaseManager] Database closed.');
+        console.log('[DatabaseManager] Database closed cleanly.');
       } catch (err) {
         console.error('[DatabaseManager] Error closing db:', err);
       }

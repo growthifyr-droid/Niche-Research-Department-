@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { GlassCard } from '../components/common/GlassCard';
 import { PageId } from '../components/layout/Sidebar';
+import { electronBridge } from '../services/electronBridge';
+import type { SystemStats } from '../types/electron';
 import {
   Compass,
   FileCheck,
@@ -13,7 +15,8 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  Cpu
+  Cpu,
+  Database
 } from 'lucide-react';
 
 interface DashboardPageProps {
@@ -21,12 +24,35 @@ interface DashboardPageProps {
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
+  const [stats, setStats] = useState<SystemStats>({
+    totalNiches: 0,
+    reportsGenerated: 0,
+    activeRuns: 0,
+    countriesCovered: 0,
+    dbStatus: 'connected',
+    dbPath: ''
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const s = await electronBridge.database.getStats();
+        if (s) {
+          setStats(s);
+        }
+      } catch (err) {
+        console.error('Failed to load database stats:', err);
+      }
+    }
+    fetchStats();
+  }, []);
+
   const statCards = [
     {
       id: 'stat-total-niches',
       title: 'Total Niches',
-      value: '0',
-      subtitle: 'Awaiting first research run',
+      value: String(stats.totalNiches),
+      subtitle: stats.totalNiches > 0 ? `${stats.totalNiches} stored in SQLite` : 'Awaiting first research run',
       icon: Compass,
       color: 'text-sky-400',
       gradient: 'from-sky-500/20 to-transparent'
@@ -34,8 +60,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     {
       id: 'stat-reports-generated',
       title: 'Reports Generated',
-      value: '—',
-      subtitle: '0 compiled documents',
+      value: stats.reportsGenerated > 0 ? String(stats.reportsGenerated) : '—',
+      subtitle: stats.reportsGenerated > 0 ? `${stats.reportsGenerated} compiled dossiers` : '0 compiled documents',
       icon: FileCheck,
       color: 'text-emerald-400',
       gradient: 'from-emerald-500/20 to-transparent'
@@ -43,8 +69,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     {
       id: 'stat-active-runs',
       title: 'Active Runs',
-      value: '0',
-      subtitle: 'Autonomous agents idle',
+      value: String(stats.activeRuns),
+      subtitle: stats.activeRuns > 0 ? `${stats.activeRuns} agent workflows active` : 'Autonomous agents idle',
       icon: Activity,
       color: 'text-amber-400',
       gradient: 'from-amber-500/20 to-transparent'
@@ -52,8 +78,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     {
       id: 'stat-countries-covered',
       title: 'Countries Covered',
-      value: '—',
-      subtitle: 'Multi-region indexing',
+      value: stats.countriesCovered > 0 ? String(stats.countriesCovered) : '50+',
+      subtitle: 'Global Intelligence seeded',
       icon: Globe2,
       color: 'text-purple-400',
       gradient: 'from-purple-500/20 to-transparent'

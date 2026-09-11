@@ -19,7 +19,7 @@ export interface SystemStats {
   reportsGenerated: number;
   activeRuns: number;
   countriesCovered: number;
-  dbStatus: 'connected' | 'disconnected' | 'memory';
+  dbStatus: 'connected' | 'disconnected' | 'memory' | 'error';
   dbPath: string;
 }
 
@@ -65,6 +65,12 @@ export interface ElectronAPI {
     saveAllSettings: (settings: Partial<AppSettings>) => Promise<boolean>;
     getStats: () => Promise<SystemStats>;
     getDbPath: () => Promise<string>;
+    getCountries: () => Promise<any[]>;
+    getCountry: (code: string) => Promise<any>;
+    getResearchRuns: (limit?: number) => Promise<any[]>;
+    getNiches: (limit?: number) => Promise<any[]>;
+    getReports: (limit?: number) => Promise<any[]>;
+    getActivityLogs: (limit?: number, runId?: string) => Promise<any[]>;
   };
   
   // Auto-updater IPC
