@@ -22,7 +22,8 @@ import {
   Database,
   ShieldCheck,
   RefreshCw,
-  FolderOpen
+  FolderOpen,
+  ExternalLink
 } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
@@ -291,20 +292,74 @@ export const SettingsPage: React.FC = () => {
             </div>
           )}
 
-          {updaterState.status === 'error' && (
-            <div className="flex items-center justify-between gap-2 text-xs text-rose-400">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{updaterState.error || 'Network error checking for updates.'}</span>
+          {updaterState.status === 'error' && (() => {
+            const rawError = updaterState.error || '';
+            const is404 =
+              rawError.includes('404') ||
+              rawError.toLowerCase().includes('status 404') ||
+              rawError.toLowerCase().includes('not found');
+
+            // Extract release URL from error string if present, or fallback to GitHub releases
+            let releasesUrl = 'https://github.com/growthifyr/niche-research-department/releases';
+            const urlMatch = rawError.match(/(https:\/\/github\.com\/[^/]+\/[^/]+)/i);
+            if (urlMatch && urlMatch[1]) {
+              releasesUrl = `${urlMatch[1]}/releases`;
+            }
+
+            const displayMessage = is404
+              ? "Update file not found on GitHub. This usually means the release files weren't uploaded correctly or the repo is private. Check the Releases page."
+              : rawError || 'Network error checking for updates.';
+
+            return (
+              <div className="p-3.5 rounded-xl border border-rose-500/25 bg-rose-500/10 text-xs text-rose-300 space-y-2.5">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+                    <div className="space-y-1">
+                      <span className="font-semibold text-rose-200 block">
+                        {is404 ? 'Download Failed (404 Not Found)' : 'Update Download Failed'}
+                      </span>
+                      <p className="text-[11.5px] leading-relaxed text-rose-300">
+                        {displayMessage}
+                      </p>
+                      {is404 && rawError && (
+                        <p className="font-mono text-[10px] text-rose-400/80 break-all bg-black/25 p-1.5 rounded border border-rose-500/20">
+                          {rawError}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-start">
+                    <button
+                      id="retry-update-btn"
+                      onClick={() => {
+                        if (updaterState.info) {
+                          downloadUpdate();
+                        } else {
+                          checkForUpdates(true);
+                        }
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-rose-500/30 hover:bg-rose-500/40 border border-rose-500/40 transition-all cursor-pointer"
+                    >
+                      <RotateCw className="w-3 h-3" />
+                      <span>Retry</span>
+                    </button>
+
+                    <button
+                      id="open-releases-page-btn"
+                      onClick={() => electronBridge.openExternal(releasesUrl)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-100 bg-black/30 hover:bg-black/50 border border-rose-500/40 transition-all cursor-pointer"
+                      title="Open GitHub Releases page in browser to manually download installer"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Open Releases Page</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={() => checkForUpdates(true)}
-                className="text-xs underline hover:text-white"
-              >
-                Retry
-              </button>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Web Preview Testing Simulator controls */}
@@ -315,10 +370,10 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => electronBridge.simulateAvailable('1.1.0')}
+                onClick={() => electronBridge.simulateAvailable('1.0.4')}
                 className="px-2.5 py-1 rounded bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 font-medium text-[11px] border border-sky-500/30 transition-colors"
               >
-                Simulate Update Available
+                Simulate Update Available (v1.0.4)
               </button>
               <button
                 onClick={() => downloadUpdate()}
@@ -327,8 +382,18 @@ export const SettingsPage: React.FC = () => {
                 Simulate Real-time Download
               </button>
               <button
-                onClick={() => electronBridge.simulateError('GitHub rate limit or network unreachable')}
+                onClick={() =>
+                  electronBridge.simulateError(
+                    'Cannot download https://github.com/growthifyr/niche-research-department/releases/download/v1.0.3/Niche-Research-Department-Setup-1.0.3.exe, status 404'
+                  )
+                }
                 className="px-2.5 py-1 rounded bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 font-medium text-[11px] border border-rose-500/30 transition-colors"
+              >
+                Simulate 404 Download Error
+              </button>
+              <button
+                onClick={() => electronBridge.simulateError('Network connection timeout while connecting to server')}
+                className="px-2.5 py-1 rounded bg-neutral-500/15 hover:bg-neutral-500/25 text-neutral-300 font-medium text-[11px] border border-neutral-500/30 transition-colors"
               >
                 Simulate Network Error
               </button>

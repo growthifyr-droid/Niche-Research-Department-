@@ -35,8 +35,11 @@ jobs:
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Build app installer & update metadata
-        run: npm run dist -- --publish never
+      - name: Build and publish app installer & update metadata
+        run: npm run dist -- --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify build output artifacts
         run: |
@@ -44,8 +47,9 @@ jobs:
           if (Test-Path release) { Get-ChildItem -Path release | Format-Table Name, Length, LastWriteTime }
           if (Test-Path dist) { Get-ChildItem -Path dist | Format-Table Name, Length, LastWriteTime }
 
-      - name: Publish GitHub Release for Auto-Updater
+      - name: Ensure release artifacts are published
         uses: softprops/action-gh-release@v2
+        if: always()
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: "Niche Research Department ${{ steps.version.outputs.tag }}"

@@ -49,6 +49,7 @@ export interface ElectronAPI {
   getAppVersion: () => Promise<string>;
   getPlatform: () => Promise<string>;
   getUserDataPath: () => Promise<string>;
+  openExternal: (url: string) => Promise<void>;
   
   // Window controls
   window: {

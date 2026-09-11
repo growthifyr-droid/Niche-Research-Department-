@@ -46,7 +46,7 @@ class ElectronBridgeService implements ElectronAPI {
     if (this.isElectron && window.electronAPI) {
       return window.electronAPI.getAppVersion();
     }
-    return '1.0.0';
+    return '1.0.4';
   }
 
   public async getPlatform(): Promise<string> {
@@ -61,6 +61,13 @@ class ElectronBridgeService implements ElectronAPI {
       return window.electronAPI.getUserDataPath();
     }
     return 'C:\\Users\\AppData\\Roaming\\niche-research-department';
+  }
+
+  public async openExternal(url: string): Promise<void> {
+    if (this.isElectron && window.electronAPI) {
+      return window.electronAPI.openExternal(url);
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   public window = {

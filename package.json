@@ -2,7 +2,7 @@
   "name": "niche-research-department",
   "productName": "Niche Research Department",
   "appId": "com.niche.research.department",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Niche Research Department",
   "description": "Desktop application for an agentic AI niche research department with in-app auto-updater, SQLite storage, and luxury UI.",
   "private": true,

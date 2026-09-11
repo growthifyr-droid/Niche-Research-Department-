@@ -33,7 +33,7 @@
       }
     ],
     "icon": "build/icon.ico",
-    "artifactName": "${productName}-Setup-${version}.${ext}",
+    "artifactName": "Niche-Research-Department-Setup-${version}.${ext}",
     "legalTrademarks": "Niche Research Department"
   },
   "nsis": {

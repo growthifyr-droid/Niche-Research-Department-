@@ -13,6 +13,7 @@
 import { BrowserWindow, ipcMain } from 'electron';
 import { autoUpdater, ProgressInfo, UpdateInfo as ElectronUpdateInfo } from 'electron-updater';
 import type { DownloadProgress, UpdateInfo } from '../types/electron';
+import { DatabaseManager } from './database';
 
 export class UpdaterManager {
   private static instance: UpdaterManager;
@@ -36,6 +37,36 @@ export class UpdaterManager {
     this.mainWindow = window;
   }
 
+  /**
+   * Configure Bearer authorization header if a GitHub token is provided.
+   * Required for private repositories where release artifacts are not public.
+   */
+  public configureAuthHeader(): void {
+    let token = (
+      process.env.GH_UPDATE_TOKEN ||
+      process.env.GH_TOKEN ||
+      process.env.GITHUB_TOKEN ||
+      ''
+    ).trim();
+
+    if (!token) {
+      try {
+        const db = DatabaseManager.getInstance();
+        const savedToken = db.getRepositories()?.settings?.get('ghUpdateToken');
+        if (savedToken && savedToken.trim()) {
+          token = savedToken.trim();
+        }
+      } catch (e) {
+        // Database not initialized yet
+      }
+    }
+
+    if (token) {
+      console.log('[Updater] Custom GitHub update token detected. Adding authorization header for private repo access...');
+      autoUpdater.addAuthHeader(`Bearer ${token}`);
+    }
+  }
+
   private configureUpdater(): void {
     // Configure electron-updater
     autoUpdater.autoDownload = false; // User controls when download begins
@@ -44,6 +75,9 @@ export class UpdaterManager {
 
     // Logging
     autoUpdater.logger = console;
+
+    // Set authorization header if private repo token is provided
+    this.configureAuthHeader();
 
     // 1. Checking for update
     autoUpdater.on('checking-for-update', () => {
@@ -140,6 +174,7 @@ export class UpdaterManager {
     }
 
     try {
+      this.configureAuthHeader();
       this.isChecking = true;
       console.log(`[Updater] Initiating check (manual=${manual})...`);
       await autoUpdater.checkForUpdates();
@@ -162,6 +197,7 @@ export class UpdaterManager {
     }
 
     try {
+      this.configureAuthHeader();
       this.isDownloading = true;
       console.log('[Updater] Starting update download...');
       autoUpdater.downloadUpdate();

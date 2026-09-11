@@ -12,6 +12,7 @@ const electronAPI: ElectronAPI = {
   getAppVersion: () => ipcRenderer.invoke('app:version'),
   getPlatform: () => ipcRenderer.invoke('app:platform'),
   getUserDataPath: () => ipcRenderer.invoke('app:userDataPath'),
+  openExternal: (url: string) => ipcRenderer.invoke('app:openExternal', url),
 
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),

@@ -9,7 +9,7 @@
  * - In-App Auto-Updater integration
  */
 
-import { app, BrowserWindow, ipcMain, screen } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, shell } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { DatabaseManager } from './database';
@@ -249,6 +249,11 @@ function registerAppIpc(): void {
   ipcMain.handle('app:version', () => app.getVersion());
   ipcMain.handle('app:platform', () => process.platform);
   ipcMain.handle('app:userDataPath', () => app.getPath('userData'));
+  ipcMain.handle('app:openExternal', async (_, url: string) => {
+    if (url && (url.startsWith('https://') || url.startsWith('http://'))) {
+      await shell.openExternal(url);
+    }
+  });
 
   // Window Controls
   ipcMain.handle('window:minimize', () => {

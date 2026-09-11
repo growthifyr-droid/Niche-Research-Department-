@@ -128,13 +128,27 @@ npm run dist:win
 ```
 
 The compiled installer will be output to the `release/` directory:
-- `release/Niche Research Department-Setup-1.0.0.exe`
+- `release/Niche-Research-Department-Setup-1.0.4.exe`
 - `release/latest.yml`
-- `release/Niche Research Department-Setup-1.0.0.exe.blockmap`
+- `release/Niche-Research-Department-Setup-1.0.4.exe.blockmap`
 
 ---
 
-## 6. Windows SmartScreen & Code Signing Note
+## 6. Private vs. Public GitHub Repository Setup (CRITICAL)
+
+If your repo is **PRIVATE**, the in-app updater needs a personal access token with `repo` scope to download release assets:
+- **Option (a) — Make the repository PUBLIC (STRONGLY RECOMMENDED)**:
+  - This is the simplest and cleanest approach. GitHub Releases in public repositories are directly accessible via anonymous HTTPS requests. The in-app auto-updater will work with **zero configuration** on every client machine.
+- **Option (b) — Set `GH_UPDATE_TOKEN`**:
+  - If your repository must remain private, set the `GH_UPDATE_TOKEN` environment variable on the client system (or in `.env`), or pass it via SQLite settings.
+  - The application automatically calls `autoUpdater.addAuthHeader(\`Bearer \${token}\`)` before querying updates or downloading `.exe` binaries.
+  - Required token scope: `repo` (Full control of private repositories).
+
+> **RECOMMENDED for this project**: Keep the GitHub repository **PUBLIC** so updates and installer downloads work with zero config for all users.
+
+---
+
+## 7. Windows SmartScreen & Code Signing Note
 
 ### Why does Windows SmartScreen ("Windows protected your PC") appear?
 When you first run the generated `.exe` installer or update binary, Windows Defender SmartScreen may display an alert saying *"Windows protected your PC"* or *"Unknown publisher"*.
