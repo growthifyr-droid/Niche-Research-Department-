@@ -34,7 +34,6 @@
     ],
     "icon": "build/icon.ico",
     "artifactName": "${productName}-Setup-${version}.${ext}",
-    "publisherName": "Niche Research Department",
     "legalTrademarks": "Niche Research Department"
   },
   "nsis": {
@@ -49,12 +48,6 @@
     "uninstallerIcon": "build/icon.ico",
     "installerHeaderIcon": "build/icon.ico",
     "runAfterFinish": true
-  },
-  "_codeSigningInstructions": {
-    "note": "Windows SmartScreen 'Unknown Publisher' displays because this release is not signed with an EV/OV Authenticode certificate.",
-    "howToSign": "To permanently eliminate SmartScreen warnings, configure 'certificateFile' (path to your .pfx certificate) and 'certificatePassword' (or set CSC_LINK and CSC_KEY_PASSWORD environment variables in CI/CD).",
-    "certificateFile": null,
-    "certificatePassword": null
   },
   "publish": {
     "provider": "github",
